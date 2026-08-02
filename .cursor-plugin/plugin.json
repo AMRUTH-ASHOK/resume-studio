@@ -1,0 +1,15 @@
+{
+  "name": "resume-studio",
+  "displayName": "Resume Studio",
+  "description": "Build a master resume as your source of truth, then generate page-perfect LaTeX resumes tailored to any job description, grad program, or internal role.",
+  "version": "1.0.0",
+  "repository": "https://github.com/Amruth-Ashok/resume-studio",
+  "keywords": [
+    "resume",
+    "cv",
+    "latex",
+    "job-search",
+    "cover-letter",
+    "ats"
+  ]
+}

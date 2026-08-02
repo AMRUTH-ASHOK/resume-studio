@@ -1,0 +1,33 @@
+# Personal resume data. The plugin ships skills, not your history.
+# Delete these lines if you deliberately want to version your own resumes
+# in a private fork.
+master-resume.md
+resume-config.md
+sources/
+targets/
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
+*.toc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

@@ -1,0 +1,47 @@
+\documentclass[11pt,a4paper,roman]{moderncv}
+\usepackage[english]{babel}
+\moderncvstyle{classic}
+\moderncvcolor{green}
+\usepackage[utf8]{inputenc}
+\usepackage{ragged2e}
+\usepackage[scale=0.79]{geometry}
+\renewcommand*{\makeletterclosing}{\par\vspace{2ex}\closingname\par}
+
+% ========== CUSTOMIZE THESE ==========
+\name{[YOUR FIRST]}{[YOUR LAST]}
+\address{[Your City, Country]}
+\phone[mobile]{[+XX XXXXXXXXXX]}
+\email{[your@email.com]}
+% ======================================
+
+\begin{document}
+
+% GENERATE: Address the team or hiring manager by name when research turns one up.
+% Fall back to "Hiring Team" only when it doesn't.
+\recipient{To}{[Hiring Manager Name or Hiring Team]\\[Team or Org Name]\\[Company Name]\\[City, Country]}
+\date{\today}
+\opening{Dear [Name or Hiring Team],}
+\makelettertitle
+
+\begin{justify}
+% Target 250-300 words total, 3 paragraphs. Never spill to page 2.
+% Max 2 em-dashes in the whole letter.
+
+% GENERATE: Paragraph 1 — Hook. Reference a specific product, platform, or problem of
+% theirs and connect it to something you have actually built. Name the role.
+
+% GENERATE: Paragraph 2 — Evidence. 2-3 achievements translated into business value.
+% Max 3-4 quantified claims. Mirror the JD's vocabulary.
+
+% GENERATE: Paragraph 3 — Closing. Forward-looking value plus an active call to action.
+\end{justify}
+
+\vspace{0.3cm}
+% ========== CUSTOMIZE THESE ==========
+{Sincerely,\\
+[Your Full Name]\\
+[Your Current Title]\\
+[Your Current Employer]}
+% ======================================
+
+\end{document}
