@@ -52,7 +52,30 @@ Cloud document links can't be read. Ask for an export to `.md`, `.txt`, `.pdf`, 
 
 ## Step 2: Read the Documents
 
-Read every file in `sources/`.
+**Convert anything that isn't already markdown or text.** Write the results to
+`sources/converted/` as `.md` so the user can read them in preview mode and diff
+them against each other.
+
+```bash
+mkdir -p sources/converted
+# Preferred, preserves headings and bullets:
+pandoc -f docx -t markdown --wrap=none "sources/FILE.docx" -o "sources/converted/FILE.md"
+# macOS fallback when pandoc isn't installed (plain text, add structure by hand):
+textutil -convert txt -output "sources/converted/FILE.txt" "sources/FILE.docx"
+```
+
+With the `textutil` fallback, the output is unstructured. Rewrite it as markdown with
+headings and bullet lists, preserving the wording exactly. Never paraphrase source
+material during conversion; fidelity matters because these are the record of what the
+user actually claimed.
+
+Normalize filenames while converting. Ampersands and spaces in filenames cause shell
+quoting failures later.
+
+PDFs can go straight through the Read tool. Only ask the user to re-export if a file
+resists every conversion path.
+
+Read every converted file.
 
 **Treat existing resume bullets as pointers to work, never as finished text.** A resume bullet is already compressed and has already lost detail. "Improved pipeline reliability" is a pointer to a story you need to recover: what was breaking, what you changed, what the numbers were before and after. Never copy a bullet straight into the master.
 
