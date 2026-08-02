@@ -83,6 +83,7 @@ Later applications skip straight to step 2. Adding new work to the master is `/m
 | `resume-start` | Detects your state, sets up the workspace, routes |
 | `master-resume` | Builds or updates the master, from documents or by interview |
 | `resume-target` | Selects and drafts a tailored resume in markdown, iterating with you |
+| `resume-preview` | Live localhost render with page breaks and per-bullet budget colours |
 | `resume-render` | Fits the confirmed draft to the character budget, compiles the PDF |
 | `resume-review` | Five-perspective critique, seven-dimension score, ranked fixes |
 | `cover-letter` | One-page letter that complements the resume rather than repeating it |

@@ -358,35 +358,97 @@ SHELL = r"""<!DOCTYPE html>
                     color: #fff; background: #ef4444; padding: 1px 7px; border-radius: 0 0 4px 4px; }
   body.nopages .pagebreak { display: none; }
 
+  /* Reference documents are NOT resumes. Make that impossible to miss. */
+  .refbanner { display: none; background: #fef3c7; border: 1px solid #f59e0b; border-left-width: 5px;
+               color: #78350f; padding: 10px 14px; margin: -0.1in 0 16px; border-radius: 4px;
+               font: 13px/1.45 -apple-system, BlinkMacSystemFont, sans-serif; }
+  .refbanner b { display: block; font-size: 13px; margin-bottom: 2px; }
+  .card.reference .refbanner { display: block; }
+  .card.reference { background: #fbfbfa; }
+  .card.reference .doc { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                         font-size: 13.5px; line-height: 1.55; }
+  .card.reference .doc h1 { font-size: 24px; }
+  .card.reference .pagebreak { display: none; }
+
+  .caption { width: var(--page-w); margin: 0 auto 8px; display: flex; align-items: baseline;
+             gap: 12px; color: #e4e4e7; font-size: 13px; font-weight: 600; }
+  .caption .path { font-weight: 400; font-size: 11px; color: #a1a1aa; }
+  .caption .chips { margin-left: auto; display: flex; gap: 8px; font-weight: 400; font-size: 11px; }
+  .chip { background: #3f3f46; padding: 2px 8px; border-radius: 10px; color: #e4e4e7; }
+  .chip.bad { background: #7f1d1d; color: #fecaca; }
+  .chip.mid { background: #7c2d12; color: #fed7aa; }
+
+  .stack { display: flex; flex-direction: column; align-items: center; gap: 34px; }
   .empty { color: #a1a1aa; text-align: center; padding: 60px; font-size: 14px; }
 </style></head><body class="budget">
 <header>
   <h1>Resume Preview</h1>
   <select id="file"></select>
-  <button id="mode">Resume layout</button>
   <button id="budget" class="on">Budget colours</button>
   <button id="pages" class="on">Page breaks</button>
   <div class="stats" id="stats"></div>
 </header>
-<main><div class="sheet"><div class="doc" id="doc"><div class="empty">Loading…</div></div></div></main>
+<main><div class="stack" id="stage"><div class="empty">Loading…</div></div></main>
 <script>
 const PAGE_CONTENT_PX = %PAGEPX%;
-let current = null, lastStamp = null, forceMode = null;
+const ALL = '__all__';
+let current = null, lastStamp = null;
+
+const ACRONYMS = new Set(['ai','ml','sde','swe','api','ux','ui','pm','sre','llm','nlp',
+                          'genai','mlops','devops','qa','hr','it','phd','ms','msc','bi']);
+const labelOf = p => !p.startsWith('targets/') ? p
+  : p.split('/')[1].split('-')
+      .map(w => ACRONYMS.has(w.toLowerCase()) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
 
 async function listFiles() {
-  const files = await (await fetch('/api/files')).json();
+  const g = await (await fetch('/api/files')).json();
   const sel = document.getElementById('file');
-  sel.innerHTML = files.map(f => `<option value="${f}">${f}</option>`).join('');
+  let html = '';
+  if (g.resumes.length) {
+    html += `<option value="${ALL}">All resumes (${g.resumes.length})</option>`;
+    html += '<optgroup label="Resumes">' +
+      g.resumes.map(f => `<option value="${f}">${labelOf(f)}</option>`).join('') + '</optgroup>';
+  }
+  html += '<optgroup label="Reference — not resumes">' +
+    g.reference.map(f => `<option value="${f}">${f}</option>`).join('') + '</optgroup>';
+  sel.innerHTML = html;
+
+  const valid = [ALL, ...g.resumes, ...g.reference];
   const saved = localStorage.getItem('rs-file');
-  if (saved && files.includes(saved)) sel.value = saved;
+  // Default to a real resume, never to the master.
+  sel.value = (saved && valid.includes(saved)) ? saved
+            : (g.resumes.length ? g.resumes[0] : g.reference[0]);
   current = sel.value;
-  sel.onchange = () => { current = sel.value; localStorage.setItem('rs-file', current); lastStamp = null; poll(); };
+  sel.onchange = () => {
+    current = sel.value; localStorage.setItem('rs-file', current);
+    lastStamp = null; poll();
+  };
 }
 
-function drawBreaks() {
-  document.querySelectorAll('.pagebreak').forEach(e => e.remove());
-  const sheet = document.querySelector('.sheet');
-  const doc = document.getElementById('doc');
+function buildCard(html, isResume, label, path) {
+  const wrap = document.createElement('div');
+  if (label) {
+    const cap = document.createElement('div');
+    cap.className = 'caption';
+    cap.innerHTML = `<span>${label}</span><span class="path">${path}</span><span class="chips"></span>`;
+    wrap.appendChild(cap);
+  }
+  const card = document.createElement('div');
+  card.className = 'sheet card' + (isResume ? '' : ' reference');
+  card.innerHTML =
+    `<div class="refbanner"><b>Reference document, not a resume.</b>
+       This file is a working document. It is never submitted anywhere and has no page limit,
+       so it is shown in plain document styling. Pick a resume from the dropdown to see real layout.</div>
+     <div class="doc">${html}</div>`;
+  wrap.appendChild(card);
+  return wrap;
+}
+
+function drawBreaks(card) {
+  card.querySelectorAll('.pagebreak').forEach(e => e.remove());
+  if (card.classList.contains('reference')) return { pages: 1, fill: 100 };
+  const doc = card.querySelector('.doc');
   const top = doc.offsetTop;
   const total = doc.scrollHeight;
   let page = 1;
@@ -396,40 +458,66 @@ function drawBreaks() {
     el.className = 'pagebreak';
     el.style.top = (top + y) + 'px';
     el.innerHTML = `<span>page ${page}</span>`;
-    sheet.appendChild(el);
+    card.appendChild(el);
   }
   return { pages: Math.max(1, Math.ceil(total / PAGE_CONTENT_PX)),
            fill: Math.round((total % PAGE_CONTENT_PX || PAGE_CONTENT_PX) / PAGE_CONTENT_PX * 100) };
 }
 
-async function poll() {
-  if (!current) return;
-  const mode = forceMode === null ? '' : `&mode=${forceMode ? 'resume' : 'doc'}`;
-  const r = await fetch(`/api/content?f=${encodeURIComponent(current)}${mode}`);
+const budgetLine = s =>
+  `<span><b>${s.bullets}</b> bullets · <b>${s.lines}</b> lines · <b>${s.skills}</b> skill lines</span>
+   <span><i class="dot" style="background:var(--ok)"></i><b>${s.ok}</b> ok</span>
+   <span><i class="dot" style="background:var(--short)"></i><b>${s.short}</b> short</span>
+   <span><i class="dot" style="background:var(--warn)"></i><b>${s.warn}</b> tight</span>
+   <span><i class="dot" style="background:var(--over)"></i><b>${s.over}</b> over</span>`;
+
+async function renderAll() {
+  const r = await fetch('/api/all');
+  const d = await r.json();
+  if (d.stamp === lastStamp) return;
+  lastStamp = d.stamp;
+  const stage = document.getElementById('stage');
+  stage.innerHTML = '';
+  let totalOver = 0;
+  d.docs.forEach(doc => {
+    const wrap = buildCard(doc.html, true, doc.label, doc.path);
+    stage.appendChild(wrap);
+    const g = drawBreaks(wrap.querySelector('.card'));
+    const s = doc.stats;
+    totalOver += s.over;
+    const chips = wrap.querySelector('.chips');
+    chips.innerHTML =
+      `<span class="chip">${g.pages} page${g.pages > 1 ? 's' : ''}</span>
+       <span class="chip">${g.fill}% fill</span>
+       <span class="chip">${s.bullets} bullets</span>
+       ${s.over ? `<span class="chip bad">${s.over} over limit</span>` : ''}
+       ${s.warn ? `<span class="chip mid">${s.warn} tight</span>` : ''}`;
+  });
+  document.getElementById('stats').innerHTML =
+    `<span><b>${d.docs.length}</b> resumes</span>` +
+    (totalOver ? `<span><i class="dot" style="background:var(--over)"></i><b>${totalOver}</b> bullets over limit</span>`
+               : `<span><i class="dot" style="background:var(--ok)"></i>all bullets within budget</span>`);
+}
+
+async function renderOne() {
+  const r = await fetch(`/api/content?f=${encodeURIComponent(current)}`);
   if (!r.ok) return;
   const d = await r.json();
   if (d.stamp === lastStamp) return;
   lastStamp = d.stamp;
-  document.getElementById('doc').innerHTML = d.html;
-  document.getElementById('mode').textContent = d.resume_mode ? 'Resume layout' : 'Document layout';
-  document.getElementById('mode').classList.toggle('on', d.resume_mode);
-  const g = drawBreaks();
-  const s = d.stats;
+  const stage = document.getElementById('stage');
+  stage.innerHTML = '';
+  const wrap = buildCard(d.html, d.resume_mode, null, null);
+  stage.appendChild(wrap);
+  const g = drawBreaks(wrap.querySelector('.card'));
   document.getElementById('stats').innerHTML = d.resume_mode
-    ? `<span><b>${g.pages}</b> page${g.pages>1?'s':''}</span>
-       <span>last page <b>${g.fill}%</b> full</span>
-       <span><b>${s.bullets}</b> bullets · <b>${s.lines}</b> lines · <b>${s.skills}</b> skill lines</span>
-       <span><i class="dot" style="background:var(--ok)"></i><b>${s.ok}</b> ok</span>
-       <span><i class="dot" style="background:var(--short)"></i><b>${s.short}</b> short</span>
-       <span><i class="dot" style="background:var(--warn)"></i><b>${s.warn}</b> tight</span>
-       <span><i class="dot" style="background:var(--over)"></i><b>${s.over}</b> over</span>`
-    : `<span>reference document · <b>${g.pages}</b> pages</span>`;
+    ? `<span><b>${g.pages}</b> page${g.pages > 1 ? 's' : ''}</span>
+       <span>last page <b>${g.fill}%</b> full</span>` + budgetLine(d.stats)
+    : `<span>reference document — not a resume</span>`;
 }
 
-document.getElementById('mode').onclick = () => {
-  forceMode = !document.getElementById('mode').classList.contains('on');
-  lastStamp = null; poll();
-};
+const poll = () => (current === ALL ? renderAll() : renderOne()).catch(() => {});
+
 document.getElementById('budget').onclick = e => {
   document.body.classList.toggle('budget');
   e.target.classList.toggle('on', document.body.classList.contains('budget'));
@@ -438,7 +526,6 @@ document.getElementById('pages').onclick = e => {
   document.body.classList.toggle('nopages');
   e.target.classList.toggle('on', !document.body.classList.contains('nopages'));
 };
-window.addEventListener('resize', drawBreaks);
 listFiles().then(poll);
 setInterval(poll, 900);
 </script></body></html>
@@ -448,25 +535,47 @@ setInterval(poll, 900);
 PAGE_CONTENT_PX = round((11.69 - 0.5 - 0.2) * 96)
 
 
+def is_resume(path):
+    """A resume is a target draft. Everything else is reference material."""
+    p = Path(path)
+    return len(p.parts) >= 2 and p.parts[0] == 'targets' and p.name == 'draft.md'
+
+
 def find_markdown(root):
+    """Split markdown into actual resumes and reference documents."""
     skip = {'.git', 'node_modules', '__pycache__', '.venv'}
-    found = []
+    resumes, reference = [], []
     for p in sorted(root.rglob('*.md')):
         if any(part in skip for part in p.parts):
             continue
-        found.append(str(p.relative_to(root)))
-    # Drafts and the master first, plugin docs last.
-    found.sort(key=lambda s: ('resume-studio/' in s, s))
-    return found
+        rel = str(p.relative_to(root))
+        (resumes if is_resume(rel) else reference).append(rel)
+    # Your own material first, plugin docs last.
+    reference.sort(key=lambda s: ('resume-studio/' in s, s))
+    return {'resumes': resumes, 'reference': reference}
+
+
+ACRONYMS = {'ai', 'ml', 'sde', 'swe', 'api', 'ux', 'ui', 'pm', 'sre', 'llm', 'nlp',
+            'genai', 'mlops', 'devops', 'qa', 'hr', 'it', 'phd', 'ms', 'msc', 'bi'}
+
+
+def label_for(path):
+    """targets/data-ai-sde/draft.md -> 'Data AI SDE'"""
+    if not is_resume(path):
+        return path
+    words = Path(path).parts[1].split('-')
+    return ' '.join(w.upper() if w.lower() in ACRONYMS else w.capitalize() for w in words)
 
 
 def is_reference_doc(path, text):
+    if is_resume(path):
+        return False
     name = Path(path).name.lower()
-    if name in ('master-resume.md', 'resume-config.md', 'readme.md'):
+    if name in ('master-resume.md', 'resume-config.md', 'readme.md', 'brief.md', 'review.md'):
         return True
     if 'Source of truth' in text[:400]:
         return True
-    return name.endswith('.md') and path.startswith('resume-studio/')
+    return path.startswith('resume-studio/')
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -492,6 +601,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         if u.path == '/api/files':
             return self._send(json.dumps(find_markdown(ROOT)))
+
+        if u.path == '/api/all':
+            docs, stamp = [], []
+            for rel in find_markdown(ROOT)['resumes']:
+                path = ROOT / rel
+                text = path.read_text(encoding='utf-8', errors='replace')
+                stamp.append(str(path.stat().st_mtime_ns))
+                docs.append({
+                    'path': rel,
+                    'label': label_for(rel),
+                    'html': md_to_html(text, True),
+                    'stats': summarize(text),
+                })
+            return self._send(json.dumps({'stamp': '-'.join(stamp), 'docs': docs}))
 
         if u.path == '/api/content':
             rel = unquote(q.get('f', [''])[0])
@@ -527,12 +650,15 @@ def main():
     if not ROOT.is_dir():
         raise SystemExit(f'Not a directory: {ROOT}')
 
-    files = find_markdown(ROOT)
+    groups = find_markdown(ROOT)
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(('127.0.0.1', args.port), Handler) as srv:
         url = f'http://localhost:{args.port}'
         print(f'Resume preview  ->  {url}')
-        print(f'Watching {ROOT}  ({len(files)} markdown file{"s" if len(files) != 1 else ""})')
+        print(f'Watching {ROOT}')
+        print(f'  {len(groups["resumes"])} resume(s), {len(groups["reference"])} reference document(s)')
+        for r in groups['resumes']:
+            print(f'    - {label_for(r)}')
         print('Edit any file and the page refreshes within a second. Ctrl-C to stop.')
         if not args.no_open:
             threading.Timer(0.6, lambda: webbrowser.open(url)).start()

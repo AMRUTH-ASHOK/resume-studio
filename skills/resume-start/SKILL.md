@@ -127,9 +127,9 @@ resume-start
 master-resume  <-------------+
      |                       | (new work to add)
      v                       |
-resume-target  --------------+
-     |  (iterate in markdown until confirmed)
-     v
+resume-target  --------------+     resume-preview
+     |  (iterate in markdown)  <--  (live localhost render,
+     v                               keep it open while iterating)
 resume-render  (LaTeX + compile)
      |
      v
@@ -138,6 +138,9 @@ resume-review  (scored critique)
      v
 cover-letter   (optional)
 ```
+
+`resume-preview` runs alongside the others rather than in sequence. Offer it as soon
+as there's a draft to look at.
 
 ## Working Style
 
