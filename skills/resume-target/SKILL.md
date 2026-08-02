@@ -148,6 +148,19 @@ Four things to get right:
 
 ## Step 5: Iterate
 
+Offer the live preview on the first iteration. Seeing the real layout changes what
+people ask for, and it makes the one-page-versus-two decision concrete instead of
+theoretical:
+
+```bash
+python3 <plugin-root>/scripts/preview.py
+```
+
+It serves `http://localhost:8000`, renders the draft with resume styling, draws A4
+page boundaries so overflow is visible, and colour-codes every bullet against its
+character budget. It reloads within a second of a file being saved, so the user can
+watch edits land while you make them.
+
 Present the draft as readable markdown, not a file path.
 
 Then ask what to change. Expect several rounds; that's the design, not a failure. Common asks: swap a bullet, lead with something else, cut a position, make the summary less generic, work in a keyword.

@@ -58,6 +58,14 @@ It figures out what you have and routes you. From a standing start the path is:
 
 **2. Target a role.** Run `/resume-target`. It asks what the application is for, takes the job description, asks whether you want one page or two, then proposes which achievements to use and why. You confirm the selection, it writes a full draft in markdown, and you go back and forth until it reads right.
 
+While iterating, keep the live preview open:
+
+```bash
+python3 scripts/preview.py
+```
+
+It serves `http://localhost:8000` with your draft rendered in resume styling, A4 page boundaries drawn so overflow is obvious, and every bullet colour-coded against its character budget. Saves show up within a second. No dependencies, no LaTeX required.
+
 **3. Render.** Run `/resume-render`. Now it becomes LaTeX, gets fitted to the character budget, and compiles. If it overflows or underfills, it tells you exactly what to cut or add rather than silently trimming.
 
 **4. Review.** Run `/resume-review` for a scored critique from five reader perspectives, with ranked fixes. Best in a fresh session.
