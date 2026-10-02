@@ -58,7 +58,7 @@ Say which you'd pick and why, in one sentence, then let them decide.
 
 **4. Anything to emphasize or avoid?** Sometimes they know something you can't infer: a hiring manager they've met, a project they're sick of being known for, a gap they want handled a specific way.
 
-Write or update `targets/<slug>/brief.md` from the template in `references/workspace.md`. Slug format: `<company>-<role>` for a specific posting, or the role family (`ai-solutions-engineer`) for a target applied to repeatedly; lowercase, hyphens.
+Write or update `targets/<slug>/brief.md` from the template in `references/workspace.md`. Slug format: `<company>-<role>` for a specific posting, or the role family (`ml-engineer`) for a target applied to repeatedly; lowercase, hyphens.
 
 ## Step 2: Research the Target
 

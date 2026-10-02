@@ -586,7 +586,7 @@ ACRONYMS = {'ai', 'ml', 'sde', 'swe', 'api', 'ux', 'ui', 'pm', 'sre', 'llm', 'nl
 
 
 def label_for(path):
-    """targets/data-ai-sde/draft.md -> 'Data AI SDE'; .../versions/v2/draft.md -> 'Data AI SDE · v2'"""
+    """targets/acme-ml-engineer/draft.md -> 'Acme ML Engineer'; .../versions/v2/draft.md -> 'Acme ML Engineer · v2'"""
     if not (is_resume(path) or is_version(path)):
         return path
     parts = Path(path).parts

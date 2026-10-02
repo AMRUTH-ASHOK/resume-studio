@@ -34,7 +34,7 @@ point is that it updates while you both work.
 margins from `resume.cls`, section rules, right-aligned dates, tight bullet spacing.
 
 **Saved versions** (`targets/<slug>/versions/vN/draft.md`) appear in their own dropdown
-group, labelled like "AI Solutions Engineer · v2", with the same layout. They're frozen,
+group, labelled like "Acme ML Engineer · v2", with the same layout. They're frozen,
 so viewing one is for comparing against the working draft, never for editing.
 
 **Page boundaries** as red dashed lines wherever a page break falls, with the page

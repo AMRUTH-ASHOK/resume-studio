@@ -33,7 +33,7 @@ targets/
 
 **Slugs** are lowercase and hyphenated. A target can be a specific posting
 (`acme-ml-engineer`) or a role family the user applies to repeatedly
-(`ai-solutions-engineer`). For a role family, `jd.md` holds one or more representative
+(`ml-engineer`). For a role family, `jd.md` holds one or more representative
 postings.
 
 **Why `jd.md` exists:** job links die when the posting closes. Save the text the first
@@ -67,7 +67,7 @@ Chats end and context is lost. Anything needed to resume must be in the files.
 - **Each draft** carries `**Status:**` and `**Based on:**` lines.
 
 Update the relevant line whenever a session stops partway. Write it for someone who
-remembers nothing: "Next: answer the two ownership questions under Retrieval Studio",
+remembers nothing: "Next: answer the two ownership questions under the payments migration",
 not "Next: continue."
 
 ---

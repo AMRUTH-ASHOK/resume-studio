@@ -61,8 +61,8 @@ touched this session, use it and name it.
 
 **Report:**
 
-> "Saved **v2** of `ai-solutions-engineer`: 2 pages. Since v1: [what changed]. The file
-> to send is `targets/ai-solutions-engineer/versions/v2/resume.pdf`. Tell me where you
+> "Saved **v2** of `acme-ml-engineer`: 2 pages. Since v1: [what changed]. The file
+> to send is `targets/acme-ml-engineer/versions/v2/resume.pdf`. Tell me where you
 > send it and I'll note it against this version."
 
 ## List

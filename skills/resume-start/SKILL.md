@@ -58,8 +58,8 @@ listing:
 
 > **Master:** built, deep dive at position 2 of 3, 4 open questions.
 > **Targets:**
-> - `ai-solutions-engineer`: v2 saved Oct 3, no edits since
-> - `data-ai-sde`: imported from an old resume, not rebuilt yet
+> - `acme-ml-engineer`: v2 saved Oct 3, no edits since
+> - `data-engineer`: imported from an old resume, not rebuilt yet
 >
 > **Next:** finish the master deep dive, starting with the open questions under [Employer].
 
@@ -136,8 +136,8 @@ and write the briefs. Then show what was set up:
 resume-config.md                   contact details, 2 source links
 sources/originals/                 3 documents
 targets/
-  ai-solutions-engineer/brief.md   2 pages, JD saved
-  databricks-internal/brief.md     2 pages, no JD yet
+  acme-ml-engineer/brief.md        1 page, JD saved
+  data-engineer/brief.md           1 page, no JD yet
 ```
 
 ### >>>>>> STOP <<<<<<
