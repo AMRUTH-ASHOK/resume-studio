@@ -561,14 +561,20 @@ def version_key(path):
     return (p.parts[1], int(p.parts[3][1:]))
 
 
+def is_user_file(path):
+    """The user's own data. The plugin's docs (skills, references, README) are hidden,
+    whether the plugin is the workspace itself or a folder inside it."""
+    p = Path(path)
+    return path in ('resume-config.md', 'master-resume.md') or p.parts[0] in ('sources', 'targets')
+
+
 def find_markdown(root):
-    """Split markdown into working resumes, saved versions, and reference documents."""
-    skip = {'.git', 'node_modules', '__pycache__', '.venv'}
+    """Split the user's markdown into working resumes, saved versions, and reference documents."""
     resumes, versions, reference = [], [], []
     for p in sorted(root.rglob('*.md')):
-        if any(part in skip for part in p.parts):
-            continue
         rel = str(p.relative_to(root))
+        if not is_user_file(rel):
+            continue
         if is_resume(rel):
             resumes.append(rel)
         elif is_version(rel):
@@ -576,8 +582,6 @@ def find_markdown(root):
         else:
             reference.append(rel)
     versions.sort(key=version_key)
-    # Your own material first, plugin docs last.
-    reference.sort(key=lambda s: ('resume-studio/' in s, s))
     return {'resumes': resumes, 'versions': versions, 'reference': reference}
 
 
