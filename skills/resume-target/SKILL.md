@@ -11,23 +11,27 @@ Turns the master resume into one tailored resume for one specific target.
 
 ## Paths
 
-- **Plugin root** holds `references/`, `assets/`, `scripts/`. If a path doesn't resolve, glob for the filename.
-- **Workspace** is the user's current folder.
+Read `references/workspace.md` for where everything lives, the `brief.md` template, and
+the draft header. If a path doesn't resolve, glob for the filename.
 
 ## Prerequisite
 
-`master-resume.md` must exist. If it doesn't, stop and route to `master-resume`. Building a target resume without a source of truth produces whatever the user happens to remember today, which is the problem this plugin exists to solve.
+`sources/master-resume.md` must exist. If it doesn't, stop and route to `master-resume`. Building a target resume without a source of truth produces whatever the user happens to remember today, which is the problem this plugin exists to solve.
+
+If the master's deep dive isn't complete, say so once and let the user choose: finish it first, or go ahead with what's there.
 
 ## Mode Detection
 
 Check `targets/` for a folder matching what the user described.
 
 - **No match** → Create mode. Step 1.
-- **Match with a `draft.md`** → Update mode. Read the existing brief and draft, ask what should change, then jump to Step 5.
+- **Match with only a `brief.md`** (created during setup) → Create mode, but read the brief first and ask only what it doesn't already answer.
+- **Match with an `IMPORTED` draft** → Create mode. The imported draft is a reference for what the user used to send, not a starting point; build fresh from the master.
+- **Match with a `DRAFTING` or `CONFIRMED` draft** → Update mode. Read the brief and draft, ask what should change, then jump to Step 5.
 
 ## Step 1: The Brief
 
-Ask these. Conversationally, not as a form. Skip anything already obvious.
+Ask these. Conversationally, not as a form. Skip anything already answered in an existing brief.
 
 **1. What is this for?**
 
@@ -39,7 +43,7 @@ Ask these. Conversationally, not as a form. Skip anything already obvious.
 | Grad program (Master's, PhD) | Reader is faculty or an admissions committee. Research, projects, coursework, and publications outrank job titles. Trajectory and intellectual fit matter more than business impact. |
 | Fellowship or scholarship | Match the stated selection criteria explicitly. |
 
-**2. The details.** Company or institution, role or program title, team or department, link or pasted text of the description. If they have the JD, ask them to paste it or drop it in the target folder.
+**2. The details.** Company or institution, role or program title, team or department, link or pasted text of the description. Save the full description text to `targets/<slug>/jd.md`, fetching it from the link if you can. Links die when postings close, and later revisions and reviews need the text. For a role family rather than one posting, save one or two representative postings.
 
 **3. One page or two?**
 
@@ -54,7 +58,7 @@ Say which you'd pick and why, in one sentence, then let them decide.
 
 **4. Anything to emphasize or avoid?** Sometimes they know something you can't infer: a hiring manager they've met, a project they're sick of being known for, a gap they want handled a specific way.
 
-Write `targets/<slug>/brief.md` with the answers. Slug format: `<company>-<role>`, lowercase, hyphens.
+Write or update `targets/<slug>/brief.md` from the template in `references/workspace.md`. Slug format: `<company>-<role>` for a specific posting, or the role family (`ai-solutions-engineer`) for a target applied to repeatedly; lowercase, hyphens.
 
 ## Step 2: Research the Target
 
@@ -69,7 +73,7 @@ Extract from the description:
 
 ## Step 3: Map the Master to the Target
 
-Read `master-resume.md`. Read `references/bullet-craft.md`.
+Read `sources/master-resume.md`. Read `references/bullet-craft.md`.
 
 For every achievement in the master, judge fit against this target. Present per position:
 
@@ -101,7 +105,7 @@ Follow `references/bullet-craft.md` for bullet construction and `references/ai-f
 ```markdown
 # [Name] — [Role] at [Company]
 
-**Target:** [role] | **Pages:** [1 or 2] | **Status:** DRAFTING
+**Target:** [role] | **Pages:** [1 or 2] | **Status:** DRAFTING | **Based on:** none
 
 ## Header
 [Name] | [email] | [phone] | [location]
@@ -180,18 +184,22 @@ Keep iterating until the user explicitly confirms. Do not proceed to rendering o
 
 ## Step 6: Lock and Hand Off
 
-On confirmation, set `**Status:** CONFIRMED` in `draft.md` and update `brief.md` with any decisions that changed along the way.
+On confirmation, set `**Status:** CONFIRMED` in `draft.md`, add any decisions that changed along the way to the brief's `## Decisions`, and set the brief's `**Next:**` line to rendering.
 
-> "Draft confirmed: [N] bullets across [M] positions, targeting [1/2] page[s]. Next: `resume-render` to typeset and check it actually fits."
+> "Draft confirmed: [N] bullets across [M] positions, targeting [1/2] page[s]. Next: `resume-render` to typeset and check it actually fits. Once the PDF looks right, it gets saved as v[N]."
+
+If the session ends before confirmation, set the brief's `**Next:**` line to the open question or the section still being iterated.
 
 ## Update Mode
 
-When a confirmed draft already exists and the user wants changes:
+When a draft already exists and the user wants changes, usually to an already-saved version:
 
-1. Read `brief.md` and `draft.md`
+1. Read `brief.md` and `draft.md`. The draft's `Based on:` line says which saved version it started from.
 2. Ask what should change and why. If it came from `review.md`, read that too.
 3. Flip status back to `DRAFTING`
 4. Apply changes, then iterate from Step 5
-5. Re-confirm, then re-render
+5. Re-confirm, then re-render. Once it's settled, `resume-version` saves it as the next version, so the earlier one stays intact.
+
+To start over from an older version rather than the latest, route to `resume-version` restore first.
 
 If the target itself changed (different role at the same company, say), start a new target folder rather than overwriting. Old drafts are useful reference.

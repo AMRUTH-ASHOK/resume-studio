@@ -1,16 +1,18 @@
 ---
 name: resume-start
-description: Entry point for all resume work. Detects what the user already has, sets up the workspace, and routes to the right skill. Use when the user wants help with a resume or CV, mentions tailoring a resume to a job, asks where to begin with job applications, or says something general like "help me with my resume" without specifying what they need.
+description: Entry point and guided setup for Resume Studio. Works out where the user is from their files, runs a short setup Q&A on first use (contact details, existing resumes, target roles), tells returning users where they left off, and routes to the next phase. Use when the user starts a chat about their resume or CV, says "start", "set me up", "where was I", or "what's next", or asks for help with a resume without saying what they need.
 ---
 
 # Resume Studio
 
-The front door. Figure out where the user is, then route. **Do not do the actual resume work in this skill** — hand off.
+The front door. Two jobs: run the setup Q&A for a new user, and tell a returning user
+exactly where they left off. **Don't do the resume work itself here.** Hand off.
 
 ## Paths
 
-- **Plugin root** holds `references/`, `assets/`, `scripts/`. If a path doesn't resolve, glob for the filename (e.g. `**/latex-budgets.md`).
-- **Workspace** is the user's current folder, where their resume data lives.
+Read `references/workspace.md` first. It defines the layout, the templates for
+`resume-config.md` and `brief.md`, the progress markers, and versioning. If a path
+doesn't resolve, glob for the filename.
 
 ## The Model
 
@@ -18,129 +20,179 @@ Two artifacts with deliberately opposite disciplines:
 
 | | Master resume | Target resume |
 |---|---|---|
-| Purpose | Source of truth | One application |
-| Format | Markdown | LaTeX → PDF |
-| Length | Unbounded. 4, 8, 20 pages. Whatever it takes. | 1 or 2 pages, hard limit |
+| Lives at | `sources/master-resume.md` | `targets/<slug>/` |
+| Purpose | Source of truth | One application or role family |
+| Format | Markdown | Markdown draft, then LaTeX and PDF |
+| Length | Unbounded. 4, 8, 20 pages. | 1 or 2 pages, hard limit |
 | Discipline | Capture everything | Select ruthlessly |
-| Submitted? | Never | Always |
+| Submitted? | Never | Always, as a saved version |
 
-Every target resume is derived from the master. The master is never sent to anyone.
+Every target is derived from the master. The master is never sent to anyone.
 
-## Workspace Layout
+## Step 1: Read the State
+
+Check silently, in order:
+
+1. **Older layout?** `master-resume.md` at the workspace root, loose files directly in
+   `sources/`, or a notes file of links such as `info.txt`. If so, tell the user what
+   will move and follow "Migrating an Older Workspace" in `references/workspace.md`
+   before anything else.
+2. **`resume-config.md`**: does it exist, and are the contact fields filled?
+3. **`sources/originals/`**: any documents?
+4. **`sources/master-resume.md`**: does it exist? Read its `> Deep dive:` and `> Next:`
+   lines.
+5. **Each `targets/<slug>/`**: the brief's `**Next:**` line, the draft's `**Status:**`,
+   whether `resume.pdf` is newer than `draft.md`, and the highest `versions/vN/`.
+
+## Step 2: Report
+
+**No `resume-config.md`** → this is a new user. Go to Step 3.
+
+**Config exists but setup is incomplete** (blank contact fields, no documents and no
+interview choice, or no targets named yet) → say what's already in place in one line,
+then run Step 3 for the missing topics only. Offer values found in existing files (an
+imported draft's header, say) as suggestions to confirm, never as facts.
+
+**Otherwise** → a returning user. Report where they are in a few lines, not a file
+listing:
+
+> **Master:** built, deep dive at position 2 of 3, 4 open questions.
+> **Targets:**
+> - `ai-solutions-engineer`: v2 saved Oct 3, no edits since
+> - `data-ai-sde`: imported from an old resume, not rebuilt yet
+>
+> **Next:** finish the master deep dive, starting with the open questions under [Employer].
+
+Take the "Next" from the files' `Next:` lines, not from memory. Then go to Step 4.
+
+## Step 3: Setup Q&A (Phase 1)
+
+Open by setting expectations in one or two sentences: a few questions now, about five
+minutes; then the master resume gets built properly; then tailored resumes, one at a
+time.
+
+Ask conversationally, **one topic at a time**, and skip anything already answered.
+
+### Topic 1: About you
+
+Name, email, phone, city and country, and whichever of LinkedIn, GitHub, or a personal
+site they want on a resume. Anything skipped stays blank and is dropped from the PDF.
+
+### Topic 2: What you already have
+
+Ask which of these exist:
+- A **master resume**: one long document with everything
+- **Role-specific resumes**: versions already tailored to different roles
+- **Other material**: LinkedIn export, performance reviews, promotion packets, project
+  notes, a portfolio
+- **Nothing written down**, which is fine; Phase 2 becomes an interview
+
+For **files**, have them drop everything into `sources/originals/` (create it). For
+**cloud links** (Google Docs, Notion, Drive), record each one in
+`## Source Documents` in the config. If you have a connector that can read the link,
+use it and save the export into `sources/originals/`; otherwise ask them to download it
+(`.docx`, `.md`, or `.pdf`) into that folder.
+
+Two things to say plainly:
+- An existing "master resume" document is a **source**, not the finished master. It
+  goes into `originals/`, and the real master gets built from it in Phase 2.
+- Role-specific resumes are useful twice: as sources for the master, and as starting
+  points for targets. Offer to register each one as a target now, importing its content
+  as a draft with `Status: IMPORTED`, so it shows up in the preview. Optional.
+
+### Topic 3: What you're aiming at
+
+For each target they name:
+- **What:** role or program, and whether it's one specific posting or a role family
+  they'll apply to repeatedly
+- **Where:** company, team, or program, if known
+- **The description:** a link, or the pasted text. Save the text to
+  `targets/<slug>/jd.md`; links stop working when postings close.
+- **Pages:** ask, but recommend. Under about five years of experience, one page; more,
+  or several distinct domains, two. Grad applications, two.
+- **Anything to emphasize or avoid**
+
+Write `targets/<slug>/brief.md` from the template in `references/workspace.md`, with
+`**Next:** Build from the master with resume-target once Phase 2 is done.`
+
+Not knowing yet is fine. Say targets can be added any time and move on.
+
+### Topic 4: Defaults
+
+Default page count, and a work authorization line only if they apply across countries.
+
+### Topic 5: Anything never to overstate
+
+Confidential projects, customer names under NDA, a title that needs verifying, work
+that was a prototype rather than shipped. Most of this surfaces during Phase 2, so
+capture what they volunteer and move on.
+
+### Write it
+
+Create `sources/originals/` and `targets/`, write `resume-config.md` from the template,
+and write the briefs. Then show what was set up:
 
 ```
-resume-config.md            # Contact info, preferences, provenance flags
-master-resume.md            # The source of truth
-sources/                    # Raw documents the user drops in
+resume-config.md                   contact details, 2 source links
+sources/originals/                 3 documents
 targets/
-  <company>-<role>/
-    brief.md                # What this application is for
-    draft.md                # Markdown draft, iterated with the user
-    resume.tex, resume.pdf
-    cover-letter.tex, cover-letter.pdf
-    review.md
+  ai-solutions-engineer/brief.md   2 pages, JD saved
+  databricks-internal/brief.md     2 pages, no JD yet
 ```
 
-## Step 1: Detect State
+### >>>>>> STOP <<<<<<
+Ask them to confirm the setup or correct anything. Then go to Step 4.
 
-Check the workspace, in order:
+## Step 4: Route
 
-1. Does `master-resume.md` exist?
-2. Does `resume-config.md` exist?
-3. What's in `targets/`?
-4. Any unprocessed files in `sources/`?
+Work through targets **one at a time**, in the order the user listed them, unless they
+pick one.
 
-Report what you found in one or two sentences. Don't dump a file listing.
+| State | Next skill |
+|-------|-----------|
+| No config | Setup Q&A, Step 3 |
+| Config, no master | `master-resume`: build it from `sources/originals/`, or by interview |
+| Master exists, deep dive not complete | `master-resume`: deep dive, resuming where it stopped |
+| Master complete, target has no draft or an `IMPORTED` one | `resume-target` for that target |
+| Draft `DRAFTING` | `resume-target`, continue iterating |
+| Draft `CONFIRMED`, PDF missing or older than the draft | `resume-render` |
+| Rendered, not saved as a version | `resume-version`: ask whether this one is settled |
+| Version saved | `resume-review`, `cover-letter`, or the next target |
+| New work to add | `master-resume`, update mode |
 
-## Step 2: Route
+Don't build a target before the master exists. Explain why in a sentence: without a
+source of truth, every application starts from whatever the user remembers that day.
+Imported drafts can still be previewed in the meantime.
 
-**No master resume yet.** This is the fork that matters most. Ask what they have:
-
-- *"I have a resume already"* → they put the file in `sources/`, then run `master-resume`. This is the fastest path and the most common.
-- *"I have several resumes"* → all of them into `sources/`. `master-resume` merges and deduplicates. Different versions often contain different details about the same job, which is useful rather than redundant.
-- *"I have nothing written down"* → `master-resume` in interview mode. Budget real time; this is a conversation, not a form.
-- *"I have scattered notes, docs, promo packets"* → into `sources/`, then `master-resume`.
-
-Do not offer to build a target resume before a master exists. Explain why briefly: without a source of truth, every application starts from zero and quality depends on what the user happens to remember that day.
-
-**Master exists, user wants to apply somewhere** → `resume-target`.
-
-**Master exists, user has new work to add** → `master-resume` (it detects the existing file and switches to update mode).
-
-**A target draft exists and is confirmed** → `resume-render`.
-
-**A rendered PDF exists** → `resume-review`, then `cover-letter` if they want one.
-
-## Step 3: First-Run Setup
-
-Only when nothing exists yet. Create:
-
-```bash
-mkdir -p sources targets
-```
-
-Then write `resume-config.md`:
-
-```markdown
-# Resume Config
-
-## Contact
-- **Name:**
-- **Email:**
-- **Phone:**
-- **Location:**
-- **LinkedIn:**
-- **GitHub:**
-- **Website:**
-
-## Defaults
-- **Default page count:** 2
-- **Work authorization line:** [text, or "none"]
-
-## Provenance Flags
-Things that must never be overstated. The generation skills check this before every output.
-
-| Item | Status | Correct framing |
-|------|--------|-----------------|
-
-## Corrections Log
-Errors caught once, never to reappear.
-
-| Correction | Detail |
-|-----------|--------|
-```
-
-Ask for contact details conversationally rather than making them fill in a form. Leave anything they don't have blank; the template drops empty fields.
-
-## Step 4: Hand Off
+## Step 5: Hand Off
 
 End by naming the next skill and what it will do. One line, not a menu.
 
-> "Next: run `master-resume`. Drop your resume into `sources/` first and it'll read from there."
+> "Next: `master-resume`. It reads your three documents in `sources/originals/` and
+> merges them into one master, then asks about what they left out."
 
 ## The Whole Flow
 
 ```
-resume-start
+resume-start  (setup Q&A, or "where you left off")
      |
      v
-master-resume  <-------------+
-     |                       | (new work to add)
-     v                       |
-resume-target  --------------+     resume-preview
-     |  (iterate in markdown)  <--  (live localhost render,
-     v                               keep it open while iterating)
-resume-render  (LaTeX + compile)
+master-resume  (build, then deep dive)  <------+
+     |                                         | (new work to add)
+     v                                         |
+resume-target  (iterate in markdown) ----------+     resume-preview
+     |                                               (live localhost render,
+     v                                                open while iterating)
+resume-render  (LaTeX + PDF)
      |
      v
-resume-review  (scored critique)
+resume-version (save as v1, v2, ... once settled)
      |
      v
-cover-letter   (optional)
+resume-review  (scored critique)  -->  cover-letter (optional)
 ```
 
-`resume-preview` runs alongside the others rather than in sequence. Offer it as soon
-as there's a draft to look at.
+`resume-preview` runs alongside the others. Offer it as soon as there's a draft.
 
 ## Working Style
 
@@ -150,3 +202,4 @@ This applies to every skill in the plugin:
 - **Stop at decision points.** Never chain through a confirmation gate on your own.
 - **Iterate on content, not markup.** Everything is discussable while it's markdown. Once it's LaTeX, changes cost more.
 - **Accuracy beats impressiveness.** Every time, without exception.
+- **Leave a trail.** Before a session ends partway, update the relevant `Next:` line so the next chat can pick up without the user remembering anything.

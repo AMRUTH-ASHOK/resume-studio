@@ -396,10 +396,14 @@ let current = null, lastStamp = null;
 
 const ACRONYMS = new Set(['ai','ml','sde','swe','api','ux','ui','pm','sre','llm','nlp',
                           'genai','mlops','devops','qa','hr','it','phd','ms','msc','bi']);
-const labelOf = p => !p.startsWith('targets/') ? p
-  : p.split('/')[1].split('-')
-      .map(w => ACRONYMS.has(w.toLowerCase()) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ');
+const labelOf = p => {
+  if (!p.startsWith('targets/')) return p;
+  const parts = p.split('/');
+  const name = parts[1].split('-')
+    .map(w => ACRONYMS.has(w.toLowerCase()) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+  return parts[2] === 'versions' ? `${name} · ${parts[3]}` : name;
+};
 
 async function listFiles() {
   const g = await (await fetch('/api/files')).json();
@@ -407,14 +411,18 @@ async function listFiles() {
   let html = '';
   if (g.resumes.length) {
     html += `<option value="${ALL}">All resumes (${g.resumes.length})</option>`;
-    html += '<optgroup label="Resumes">' +
+    html += '<optgroup label="Resumes (working drafts)">' +
       g.resumes.map(f => `<option value="${f}">${labelOf(f)}</option>`).join('') + '</optgroup>';
+  }
+  if (g.versions.length) {
+    html += '<optgroup label="Saved versions (frozen)">' +
+      g.versions.map(f => `<option value="${f}">${labelOf(f)}</option>`).join('') + '</optgroup>';
   }
   html += '<optgroup label="Reference — not resumes">' +
     g.reference.map(f => `<option value="${f}">${f}</option>`).join('') + '</optgroup>';
   sel.innerHTML = html;
 
-  const valid = [ALL, ...g.resumes, ...g.reference];
+  const valid = [ALL, ...g.resumes, ...g.versions, ...g.reference];
   const saved = localStorage.getItem('rs-file');
   // Default to a real resume, never to the master.
   sel.value = (saved && valid.includes(saved)) ? saved
@@ -536,23 +544,41 @@ PAGE_CONTENT_PX = round((11.69 - 0.5 - 0.2) * 96)
 
 
 def is_resume(path):
-    """A resume is a target draft. Everything else is reference material."""
+    """A resume is a target's working draft: targets/<slug>/draft.md."""
     p = Path(path)
-    return len(p.parts) >= 2 and p.parts[0] == 'targets' and p.name == 'draft.md'
+    return len(p.parts) == 3 and p.parts[0] == 'targets' and p.name == 'draft.md'
+
+
+def is_version(path):
+    """A frozen snapshot: targets/<slug>/versions/vN/draft.md."""
+    p = Path(path)
+    return (len(p.parts) == 5 and p.parts[0] == 'targets' and p.parts[2] == 'versions'
+            and re.fullmatch(r'v\d+', p.parts[3]) is not None and p.name == 'draft.md')
+
+
+def version_key(path):
+    p = Path(path)
+    return (p.parts[1], int(p.parts[3][1:]))
 
 
 def find_markdown(root):
-    """Split markdown into actual resumes and reference documents."""
+    """Split markdown into working resumes, saved versions, and reference documents."""
     skip = {'.git', 'node_modules', '__pycache__', '.venv'}
-    resumes, reference = [], []
+    resumes, versions, reference = [], [], []
     for p in sorted(root.rglob('*.md')):
         if any(part in skip for part in p.parts):
             continue
         rel = str(p.relative_to(root))
-        (resumes if is_resume(rel) else reference).append(rel)
+        if is_resume(rel):
+            resumes.append(rel)
+        elif is_version(rel):
+            versions.append(rel)
+        else:
+            reference.append(rel)
+    versions.sort(key=version_key)
     # Your own material first, plugin docs last.
     reference.sort(key=lambda s: ('resume-studio/' in s, s))
-    return {'resumes': resumes, 'reference': reference}
+    return {'resumes': resumes, 'versions': versions, 'reference': reference}
 
 
 ACRONYMS = {'ai', 'ml', 'sde', 'swe', 'api', 'ux', 'ui', 'pm', 'sre', 'llm', 'nlp',
@@ -560,15 +586,17 @@ ACRONYMS = {'ai', 'ml', 'sde', 'swe', 'api', 'ux', 'ui', 'pm', 'sre', 'llm', 'nl
 
 
 def label_for(path):
-    """targets/data-ai-sde/draft.md -> 'Data AI SDE'"""
-    if not is_resume(path):
+    """targets/data-ai-sde/draft.md -> 'Data AI SDE'; .../versions/v2/draft.md -> 'Data AI SDE · v2'"""
+    if not (is_resume(path) or is_version(path)):
         return path
-    words = Path(path).parts[1].split('-')
-    return ' '.join(w.upper() if w.lower() in ACRONYMS else w.capitalize() for w in words)
+    parts = Path(path).parts
+    words = parts[1].split('-')
+    label = ' '.join(w.upper() if w.lower() in ACRONYMS else w.capitalize() for w in words)
+    return f'{label} · {parts[3]}' if is_version(path) else label
 
 
 def is_reference_doc(path, text):
-    if is_resume(path):
+    if is_resume(path) or is_version(path):
         return False
     name = Path(path).name.lower()
     if name in ('master-resume.md', 'resume-config.md', 'readme.md', 'brief.md', 'review.md'):

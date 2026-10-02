@@ -1,6 +1,6 @@
 # Master Resume Format
 
-The structure of `master-resume.md`. Read by `master-resume` when writing, and by `resume-target` when selecting.
+The structure of `sources/master-resume.md`. Read by `master-resume` when writing, and by `resume-target` when selecting.
 
 The format is optimized for two readers: a human skimming their own history, and a generator selecting evidence for a specific target. That's why metadata sits inline with each achievement rather than in a separate index.
 
@@ -13,6 +13,8 @@ The format is optimized for two readers: a human skimming their own history, and
 
 > Source of truth. Never submitted. No length limit.
 > Last updated: [date] | [N] positions | [M] achievements
+> Deep dive: [not started | in progress | [Employer, Title] | [Achievement] next | [N] open questions | complete]
+> Next: [the exact entry or question to pick up next]
 
 ---
 

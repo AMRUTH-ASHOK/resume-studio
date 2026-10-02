@@ -327,7 +327,7 @@ Final mechanical checklist. Run AFTER all other critique parts. These are pass/f
 - [ ] All provenance flags correct (see `resume-config.md`)
 - [ ] No forbidden terms (see the `resume-config.md` corrections log)
 - [ ] No inflation (shared-work verbs hedged, no false claims)
-- [ ] Every metric and ownership claim traceable to `master-resume.md`
+- [ ] Every metric and ownership claim traceable to `sources/master-resume.md`
 - [ ] Cover letter claims traceable to resume bullets
 
 ### Structural Checks

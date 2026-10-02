@@ -8,71 +8,85 @@ Resume Studio splits the problem in two.
 
 **The master resume** is an unbounded markdown document. Four pages, ten, twenty. Every project, every metric, every detail that won't fit anywhere. You never submit it. It exists so that no application ever starts from whatever you happen to remember that day.
 
-**Target resumes** are derived from it. One page or two, LaTeX, fitted to the exact character budget of the template so nothing overflows or looks half-empty. Each one selects from the master and reframes for a specific reader.
+**Target resumes** are derived from it. One page or two, LaTeX, fitted to the exact character budget of the template so nothing overflows or looks half-empty. Each one selects from the master and reframes for a specific reader, and each settled version is saved as v1, v2, and so on.
 
 Everything is discussed in markdown and only becomes LaTeX after you say the content is right.
 
 ---
 
-## Install
+## Quick Start
 
-**Cursor** — clone it and open the folder, or add it as a plugin:
+1. **Get it:** `git clone https://github.com/Amruth-Ashok/resume-studio.git`
+2. **Open the folder** in Cursor or Claude Code.
+3. **Start a chat** and say *"Help me with my resume"*, or type `/resume-start`.
 
+It asks a few questions to get set up: who you are, what resumes or documents you already have, and which roles you're aiming at. Then it walks you through everything else. Your resume data lives in this folder and is gitignored, so `git pull` updates the tool without touching your files.
+
+Saying "start" always works, because `AGENTS.md` and `CLAUDE.md` tell the agent where the skills are. The `/resume-start` slash command appears once the plugin is installed (below).
+
+### Keep your data in a separate folder
+
+Install it as a plugin, then start a chat in any folder:
+
+- **Cursor:** open Customize, add a plugin **From GitHub Repository**, enter `Amruth-Ashok/resume-studio`, and install it.
+- **Claude Code:**
+  ```
+  /plugin marketplace add Amruth-Ashok/resume-studio
+  /plugin install resume-studio@resume-studio
+  ```
+
+Or keep a clone anywhere and put an `AGENTS.md` in your data folder pointing at it:
+
+```markdown
+This folder holds my resume data for Resume Studio. The plugin is at ../resume-studio.
+Read ../resume-studio/AGENTS.md and follow it. Skills are in ../resume-studio/skills/.
 ```
-/plugin marketplace add Amruth-Ashok/resume-studio
-```
-
-**Claude Code:**
-
-```
-/plugin marketplace add Amruth-Ashok/resume-studio
-/plugin install resume-studio@resume-studio
-```
-
-**Or just clone it** and work inside the folder. The skills are plain markdown in `skills/` and both tools discover them.
 
 ### Requirements
 
-- **Python 3** for the character counter
-- **A LaTeX distribution** to produce PDFs. On macOS:
+- **Python 3** for the character counter and the live preview
+- **A LaTeX distribution** to produce PDFs. On macOS, TinyTeX installs into your home folder with no admin password, so the agent can run it for you:
   ```bash
-  brew install --cask basictex
-  eval "$(/usr/libexec/path_helper)"
-  sudo tlmgr install fontawesome lastpage enumitem moderncv ragged2e
+  curl -fsSL https://github.com/rstudio/tinytex-releases/releases/download/daily/TinyTeX-1-darwin.tar.xz | tar -xJ -C ~/Library
+  echo 'export PATH="$HOME/Library/TinyTeX/bin/universal-darwin:$PATH"' >> ~/.zshrc && source ~/.zshrc
+  tlmgr install lastpage parskip enumitem fontawesome pgf fancyhdr moderncv fontawesome6 multirow colortbl ragged2e microtype babel-english lm
   ```
-  Everything except the final PDF works without it.
+  Already have MacTeX or BasicTeX? Just run the `tlmgr install` line with `sudo`. Everything except the final PDF works without LaTeX.
 
 ---
 
-## Use
+## How It Works
 
-Start here, in a folder where you want your resume data to live:
+Three phases, each a guided conversation. Every phase writes down where it stopped, so you can close the chat and pick up in a new one; `/resume-start` tells you where you left off.
 
-```
-/resume-start
-```
+**1. Setup.** `/resume-start` asks about you, what you already have (a master resume, role-specific resumes, review packets, or nothing at all), and what you're targeting, with job-description links where you have them. It creates your config, a `sources/originals/` folder for your documents, and one folder per target.
 
-It figures out what you have and routes you. From a standing start the path is:
+**2. The master resume.** `/master-resume` reads everything in `sources/originals/` and merges it into `sources/master-resume.md`. Then comes the deep dive: one experience at a time, one achievement at a time, it asks about what your old resumes compressed away, like what you actually owned, what the numbers were, and what shipped. With nothing written down, it runs as an interview instead. Expect this to take a while. You only do it once; later, new work gets appended.
 
-**1. Build the master.** Drop your existing resume into `sources/` and run `/master-resume`. It reads what you have, then asks about everything the resume compressed away: what you actually owned, what the numbers were, what shipped and what didn't. If you have nothing written down, it runs as an interview instead. Expect this to take a while. It's the only step you do once.
+**3. Targets, one at a time.** `/resume-target` proposes which achievements to use for that role and why, then drafts in markdown with you until it reads right. `/resume-render` turns it into LaTeX and a PDF that fits the page exactly. When you're happy, `/resume-version` saves it as **v1**. Then `/resume-review` for a scored critique, and `/cover-letter` if you need one.
 
-**2. Target a role.** Run `/resume-target`. It asks what the application is for, takes the job description, asks whether you want one page or two, then proposes which achievements to use and why. You confirm the selection, it writes a full draft in markdown, and you go back and forth until it reads right.
-
-While iterating, keep the live preview open:
+While drafting, keep the live preview open:
 
 ```bash
 python3 scripts/preview.py
 ```
 
-It serves `http://localhost:8000` with your draft rendered in resume styling, A4 page boundaries drawn so overflow is obvious, and every bullet colour-coded against its character budget. Saves show up within a second. No dependencies, no LaTeX required.
+It serves `http://localhost:8000` with every draft rendered in resume styling, A4 page boundaries drawn so overflow is obvious, and every bullet colour-coded against its character budget. Saves show up within a second. No dependencies, no LaTeX required.
 
-**3. Render.** Run `/resume-render`. Now it becomes LaTeX, gets fitted to the character budget, and compiles. If it overflows or underfills, it tells you exactly what to cut or add rather than silently trimming.
+---
 
-**4. Review.** Run `/resume-review` for a scored critique from five reader perspectives, with ranked fixes. Best in a fresh session.
+## Versions
 
-**5. Cover letter.** Run `/cover-letter` if you need one.
+Each target keeps a numbered history. `draft.md` is always the working copy; when you say a resume is settled, the draft and its PDF are frozen into `versions/v1/`, and every later change becomes v2, v3, and so on. Each version records the date, what changed since the last one, and which master it came from.
 
-Later applications skip straight to step 2. Adding new work to the master is `/master-resume` again, which switches to append mode.
+Things you can just ask for:
+
+- *"This one's good, save it."*
+- *"What changed between v1 and v2?"*
+- *"Go back to v1 and start from there."*
+- *"I sent v2 to Acme."*
+
+The file to send is always `targets/<name>/versions/vN/resume.pdf`.
 
 ---
 
@@ -80,11 +94,12 @@ Later applications skip straight to step 2. Adding new work to the master is `/m
 
 | Skill | What it does |
 |-------|-------------|
-| `resume-start` | Detects your state, sets up the workspace, routes |
-| `master-resume` | Builds or updates the master, from documents or by interview |
+| `resume-start` | Setup Q&A for new users, "where you left off" for returning ones |
+| `master-resume` | Builds the master from documents or by interview, deep dives it, appends new work |
 | `resume-target` | Selects and drafts a tailored resume in markdown, iterating with you |
 | `resume-preview` | Live localhost render with page breaks and per-bullet budget colours |
 | `resume-render` | Fits the confirmed draft to the character budget, compiles the PDF |
+| `resume-version` | Saves settled resumes as v1, v2, ..., compares them, restores old ones |
 | `resume-review` | Five-perspective critique, seven-dimension score, ranked fixes |
 | `cover-letter` | One-page letter that complements the resume rather than repeating it |
 
@@ -109,19 +124,22 @@ Works for job applications, internal transfers, grad school (Master's and PhD), 
 ## Layout
 
 ```
-resume-config.md      # Your contact info and preferences
-master-resume.md      # The source of truth
-sources/              # Documents you drop in
+resume-config.md            # Your contact info, preferences, links to your documents
+sources/
+  master-resume.md          # The source of truth
+  originals/                # The resumes and documents you started from
 targets/
-  acme-senior-swe/
-    brief.md          # What this application is for
-    draft.md          # Markdown, iterated with you
-    resume.tex/.pdf
-    cover-letter.tex/.pdf
-    review.md
+  acme-senior-swe/          # One folder per target: a posting or a role family
+    brief.md                # What it's for, decisions, version history
+    jd.md                   # The job description text
+    draft.md                # Working copy, iterated with you
+    resume.tex/.pdf         # Latest build
+    versions/
+      v1/                   # Frozen: draft, LaTeX, PDF
+      v2/
 ```
 
-Your data is gitignored by default. The repo ships skills, not your career history.
+Your data is gitignored by default. The repo ships skills, not your career history. The full rules live in `references/workspace.md`.
 
 ---
 

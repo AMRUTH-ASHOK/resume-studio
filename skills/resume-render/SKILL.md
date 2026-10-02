@@ -9,15 +9,25 @@ Turns a confirmed markdown draft into a compiled PDF that hits its page target e
 
 ## Paths
 
-- **Plugin root** holds `references/`, `assets/`, `scripts/`. If a path doesn't resolve, glob for the filename.
-- **Workspace** is the user's current folder.
+Read `references/workspace.md` for where everything lives. If a path doesn't resolve,
+glob for the filename.
 
 ## Prerequisites
 
 1. `targets/<slug>/draft.md` exists with `**Status:** CONFIRMED`. If it says `DRAFTING`, stop and route back to `resume-target`. Rendering unconfirmed content wastes the fitting work.
-2. A LaTeX toolchain. Check with `which pdflatex`. If missing:
+2. A LaTeX toolchain. Check with `which pdflatex`. If that fails, check `~/Library/TinyTeX/bin/universal-darwin/pdflatex` before concluding it's missing; it may be installed but not on this shell's PATH.
 
-   > "No LaTeX found. Install BasicTeX (~100MB): `brew install --cask basictex`, then `eval "$(/usr/libexec/path_helper)"` and `sudo tlmgr install fontawesome lastpage enumitem`. I can generate the `.tex` now and you compile later, or wait until it's installed."
+   If it really is missing, install TinyTeX. It lives in the home directory and needs no admin password, so you can run all of it yourself (network access only, ~250MB on disk):
+
+   ```bash
+   curl -fsSL https://github.com/rstudio/tinytex-releases/releases/download/daily/TinyTeX-1-darwin.tar.xz | tar -xJ -C ~/Library
+   export PATH="$HOME/Library/TinyTeX/bin/universal-darwin:$PATH"
+   tlmgr install lastpage parskip enumitem fontawesome pgf fancyhdr moderncv fontawesome6 multirow colortbl ragged2e microtype babel-english lm
+   ```
+
+   Then add that `export PATH=...` line to `~/.zshrc` so new terminals find it. Don't use TinyTeX's `install-bin-unix.sh`: without `--no-path` it may block on a `sudo` prompt, and with `--no-path` it exits with an error after extracting. Don't use `brew install --cask basictex` either; its installer needs `sudo`, which an agent shell can't answer.
+
+   If the user already has MacTeX or BasicTeX, run the same `tlmgr install` line with `sudo`. It skips anything already present.
 
    Generating the `.tex` without compiling is a legitimate outcome. Say clearly that page fit is unverified.
 
@@ -84,11 +94,16 @@ python3 <plugin-root>/scripts/char_count.py targets/<slug>/resume.tex
 
 It checks every bullet and every skill line, and prints a violations list. **Fix every violation before compiling.** The tool is authoritative; don't override it with your own estimate.
 
-Then compile:
+Then compile. Always two passes: the footer's `page/total` comes from `\pageref{LastPage}`, which only resolves on the second pass, so a single pass ships "1/??".
 
 ```bash
-pdflatex -interaction=nonstopmode -output-directory=targets/<slug> targets/<slug>/resume.tex
+for pass in 1 2; do
+  pdflatex -interaction=nonstopmode -halt-on-error -output-directory=targets/<slug> targets/<slug>/resume.tex > /dev/null
+done
+grep -E "^!|Output written|undefined|Overfull" targets/<slug>/resume.log
 ```
+
+`Output written ... (N pages ...)` gives the page count. Any `!` line is a compile error; any `undefined` line means a pass was skipped. Once it's clean, delete `resume.aux`, `resume.log`, and `resume.out` so the target folder holds only source and output.
 
 Read the resulting PDF and check:
 
@@ -97,6 +112,7 @@ Read the resulting PDF and check:
 | Page count | Matches the target exactly |
 | Last page fill | No more than ~3 lines of white space |
 | Orphans | No bullet whose last line is a stub |
+| Stranded headings | No section or position heading as the last thing on a page |
 | Header wrap | Position title and date share one line |
 | Escapes | No stray `\&` or literal `$` in the output |
 
@@ -116,9 +132,11 @@ If the same content fails to fit after two rounds, that's a signal the page targ
 
 ## Step 6: Report
 
-> "Compiled: `targets/<slug>/resume.pdf`, [N] pages, [M] bullets, 0 violations. [Anything reworded to fit.] Next: `resume-review` for a scored critique, or `cover-letter` if you need one."
+> "Compiled: `targets/<slug>/resume.pdf`, [N] pages, [M] bullets, 0 violations. [Anything reworded to fit.] Is this one settled? If so I'll save it as v[N], frozen with its PDF, and any later changes become v[N+1]."
 
 List any bullet you reworded during fitting. The user confirmed specific wording and deserves to know what changed, even when the change was mechanical.
+
+If they say it's settled, hand off to `resume-version` to save it. If not, set the brief's `**Next:**` line to what they want changed and route back to `resume-target`. Either way, `resume-review` and `cover-letter` are the follow-ups once a version exists.
 
 ## Re-Rendering
 

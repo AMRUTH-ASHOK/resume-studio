@@ -9,8 +9,8 @@ Scores a rendered resume against its target and returns ranked, specific fixes.
 
 ## Paths
 
-- **Plugin root** holds `references/`, `assets/`, `scripts/`. If a path doesn't resolve, glob for the filename.
-- **Workspace** is the user's current folder.
+Read `references/workspace.md` for where everything lives. If a path doesn't resolve,
+glob for the filename.
 
 ## Best Practice
 
@@ -18,15 +18,17 @@ Run this in a **fresh session**. A review written in the same context that produ
 
 ## Load
 
-1. `targets/<slug>/brief.md` — what this is for
-2. `targets/<slug>/draft.md` — confirmed content
+1. `targets/<slug>/brief.md` — what this is for, and the `## Versions` table
+2. `targets/<slug>/draft.md` — confirmed content. To review a specific saved version instead, read from `versions/vN/`.
 3. `targets/<slug>/resume.tex` and `resume.pdf` — what actually renders
-4. The job or program description
+4. `targets/<slug>/jd.md` — the job or program description
 5. `references/review-rubric.md` — the full scoring protocol
 6. `references/ai-fingerprint.md` — the detection scan
 7. `resume-config.md` — provenance flags and the corrections log
-8. `master-resume.md` — needed to verify claims and to find unused evidence
+8. `sources/master-resume.md` — needed to verify claims and to find unused evidence
 9. Any prior `targets/<slug>/review.md` — note the previous score
+
+State at the top of the review which version it covers (`v2`, or "unsaved build based on v2").
 
 If the resume hasn't been rendered, review the draft and say that visual checks were skipped.
 
@@ -47,7 +49,7 @@ Scoring weights: ATS keywords 15, summary 10, skills 10, bullet quality 30, narr
 
 ## Two Checks That Need the Master
 
-**Truthfulness.** Every metric and ownership claim on the resume must trace back to an entry in `master-resume.md` with compatible `scope:` and `status:` tags. A bullet saying "Built" where the master says `contributor` is a Tier 1 fix, not a style note. Verify each one rather than spot-checking.
+**Truthfulness.** Every metric and ownership claim on the resume must trace back to an entry in `sources/master-resume.md` with compatible `scope:` and `status:` tags. A bullet saying "Built" where the master says `contributor` is a Tier 1 fix, not a style note. Verify each one rather than spot-checking.
 
 **Unused evidence.** You can see the full master, so you can see what was left out. If a stronger achievement was passed over, say so. This is the highest-value thing a reviewer with master access can offer, and it's invisible to any external reader.
 

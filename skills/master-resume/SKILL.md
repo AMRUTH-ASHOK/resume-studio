@@ -1,18 +1,17 @@
 ---
 name: master-resume
-description: Builds or updates the master resume, an unbounded markdown document that serves as the single source of truth for all tailored resumes. Use when the user wants to create a master resume from existing documents or from scratch, add a new job or project to their master resume, record recent accomplishments, or when a target resume is blocked because the master is missing or out of date.
+description: Builds, deepens, and updates the master resume, an unbounded markdown document that serves as the single source of truth for all tailored resumes. Use when the user wants to create a master resume from existing documents or from scratch, go through their master experience by experience to add detail, add a new job or project, record recent accomplishments, or when a target resume is blocked because the master is missing or out of date.
 ---
 
 # Master Resume
 
-Builds and maintains `master-resume.md`, the source of truth every tailored resume is derived from.
+Builds and maintains `sources/master-resume.md`, the source of truth every tailored resume is derived from.
 
 ## Paths
 
-- **Plugin root** holds `references/`, `assets/`, `scripts/`. If a path doesn't resolve, glob for the filename.
-- **Workspace** is the user's current folder.
-
-Read `references/master-resume-format.md` before writing anything. It defines the required structure.
+Read `references/workspace.md` for the layout and `references/master-resume-format.md`
+for the required structure before writing anything. If a path doesn't resolve, glob for
+the filename.
 
 ## The One Rule
 
@@ -32,36 +31,38 @@ When in doubt, include it. Cutting is `resume-target`'s job, and it can only cut
 
 ## Mode Detection
 
-Check for `master-resume.md`:
+Check `sources/master-resume.md`:
 
 - **Missing** → Build mode. Go to Step 1.
-- **Exists** → Update mode. Skip to Update Mode below.
+- **Exists, header says `Deep dive: complete`** → Update mode, unless the user asks to go deeper.
+- **Exists, deep dive not complete** → Deep Dive mode, resuming where the header says it stopped.
 
 ## Step 1: Choose an Input Path
 
-Check `sources/` for files.
+Check `sources/originals/` for files.
 
 **Files present** → Document mode. Go to Step 2.
 
 **Empty** → Ask which applies:
-- They have a resume or docs to share → have them drop files into `sources/`, then Document mode
+- They have a resume or docs to share → have them drop files into `sources/originals/`, then Document mode
 - They'd rather talk it through → Interview mode, Step 4
 - Some of each → Document mode first, then Interview mode to fill the gaps
 
-Cloud document links can't be read. Ask for an export to `.md`, `.txt`, `.pdf`, or `.docx` in `sources/`.
+Check `## Source Documents` in `resume-config.md` for links. If you have a connector that can read one, export it into `sources/originals/`; otherwise ask for a `.md`, `.txt`, `.pdf`, or `.docx` export into that folder.
 
 ## Step 2: Read the Documents
 
 **Convert anything that isn't already markdown or text.** Write the results to
-`sources/converted/` as `.md` so the user can read them in preview mode and diff
-them against each other.
+`sources/originals/converted/` as `.md` so the user can read them in preview mode and
+diff them against each other. Delete that folder once the master is written; the
+originals stay as the record, and leftover conversions get mistaken for a second master.
 
 ```bash
-mkdir -p sources/converted
+mkdir -p sources/originals/converted
 # Preferred, preserves headings and bullets:
-pandoc -f docx -t markdown --wrap=none "sources/FILE.docx" -o "sources/converted/FILE.md"
+pandoc -f docx -t markdown --wrap=none "sources/originals/FILE.docx" -o "sources/originals/converted/FILE.md"
 # macOS fallback when pandoc isn't installed (plain text, add structure by hand):
-textutil -convert txt -output "sources/converted/FILE.txt" "sources/FILE.docx"
+textutil -convert txt -output "sources/originals/converted/FILE.txt" "sources/originals/FILE.docx"
 ```
 
 With the `textutil` fallback, the output is unstructured. Rewrite it as markdown with
@@ -132,16 +133,66 @@ Every achievement entry carries metadata that `resume-target` depends on:
 - `Tags` — which kinds of roles this is evidence for
 - `Confidential` — anything that can't appear verbatim in a public document
 
-Write the file. Then report: positions, projects, achievements, and how many lack metrics.
+Write the file to `sources/master-resume.md`, with `> Deep dive: not started` and a `> Next:` line in the header. Then report: positions, projects, achievements, and how many lack metrics.
 
 ### >>>>>> STOP <<<<<<
 Present the master resume and the gap list. Wait for the user to review.
 
-Expect corrections. People spot errors in their own history immediately, and the first read usually produces several. Apply them, then confirm.
+Expect corrections. People spot errors in their own history immediately, and the first read usually produces several. Apply them, then offer the deep dive.
+
+## Deep Dive Mode
+
+A first build captures what the documents said. The deep dive recovers what they
+compressed away. It walks the master **one experience at a time, one achievement at a
+time**, and it's what turns a merged document into a source of truth.
+
+It's long, so it's built to stop and resume. Progress lives in the header:
+
+```markdown
+> Deep dive: in progress | [Employer, Title] | [Achievement name] next | [N] open questions
+> Next: [the exact question or entry to pick up]
+```
+
+### Order
+
+Work in the order the master lists things: positions newest first, achievements top to
+bottom within each, then education, then the optional sections. Start with
+**Profile** and **Team context** for each position before its achievements, since they
+frame everything below.
+
+### Per achievement
+
+1. **Show it.** Quote the current entry briefly, so the user is reacting to what's
+   written rather than to what they remember.
+2. **Ask only what's missing.** Use the Step 4 questions, but skip any the entry already
+   answers well. Typical gaps: ownership, the baseline behind a metric, whether it
+   shipped, who else was involved, what was hard. Two or three questions at a time,
+   never the full list.
+3. **Apply the answers** to the entry, including its `scope:` and `status:` tags and
+   provenance notes. If an answer conflicts with what a source document claimed, flag it
+   and ask which is right.
+4. **Move items** the user can't answer now into `## Gaps & TODOs`, rather than
+   blocking on them.
+5. **Update the header** to point at the next achievement.
+
+Accept "skip", "remove this", and "merge this with X" as answers. Removing something
+still needs a one-line confirmation.
+
+### Checkpoints
+
+After each position: "[Employer] is done: [N] achievements, [K] open questions. Next is
+[Position]. Carry on, or stop here?" Stopping is always fine; the header already says
+where to resume.
+
+### Finishing
+
+When every section has been through, run the Quality Bar below. Set
+`> Deep dive: complete` and `> Next: build a target with resume-target`, then hand off.
+Remaining open questions can stay in `## Gaps & TODOs`; they don't block targets.
 
 ## Update Mode
 
-Triggered when `master-resume.md` already exists.
+Triggered when `sources/master-resume.md` exists and the deep dive is complete.
 
 1. Read the current master
 2. Ask what's new. Common cases: a new job, a new project in the current job, a promotion or title change, new metrics on existing work now that time has passed, a new certification or talk
@@ -169,4 +220,10 @@ Before declaring the master done, check:
 
 ## Handing Off
 
-> "Master resume ready: [N] positions, [M] achievements, [K] flagged as thin. Next: `resume-target` when you have a role in mind. Worth filling the flagged gaps first if you can find the numbers."
+After a first build:
+
+> "Master resume written: [N] positions, [M] achievements, [K] flagged as thin. Next: the deep dive, one experience at a time, starting with [first position]."
+
+After the deep dive:
+
+> "Master resume complete: [N] positions, [M] achievements, [K] open questions parked in Gaps & TODOs. Next: `resume-target`, starting with [first target in targets/]."

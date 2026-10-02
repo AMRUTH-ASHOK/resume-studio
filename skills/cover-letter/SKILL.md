@@ -9,21 +9,22 @@ Writes a one-page letter that deepens the resume rather than restating it.
 
 ## Paths
 
-- **Plugin root** holds `references/`, `assets/`, `scripts/`. If a path doesn't resolve, glob for the filename.
-- **Workspace** is the user's current folder.
+Read `references/workspace.md` for where everything lives. If a path doesn't resolve,
+glob for the filename.
 
 ## Prerequisite
 
-A confirmed resume draft at `targets/<slug>/draft.md`. The letter is written against a known resume so the two documents don't contradict each other or repeat each other.
+A confirmed resume draft at `targets/<slug>/draft.md`, ideally already saved as a version. The letter is written against a known resume so the two documents don't contradict each other or repeat each other.
 
 ## Load
 
 1. `targets/<slug>/brief.md` — target type and research
-2. `targets/<slug>/draft.md` — what the resume already says
-3. `master-resume.md` — specifically the "What was hard" and "Collaboration" fields, which is where letter material lives
-4. `references/cover-letter-craft.md` — structure and anti-patterns
-5. `references/ai-fingerprint.md` — letters are the most detectable document, so this matters more here than anywhere else
-6. `resume-config.md` — contact details
+2. `targets/<slug>/jd.md` — the description the letter answers
+3. `targets/<slug>/draft.md` — what the resume already says
+4. `sources/master-resume.md` — specifically the "What was hard" and "Collaboration" fields, which is where letter material lives
+5. `references/cover-letter-craft.md` — structure and anti-patterns
+6. `references/ai-fingerprint.md` — letters are the most detectable document, so this matters more here than anywhere else
+7. `resume-config.md` — contact details
 
 ## The Governing Idea
 
@@ -63,13 +64,20 @@ Iterate until the user confirms.
 
 ## Then Render
 
-Read `assets/templates/cover-letter.tex`. Fill from `resume-config.md`. Compile:
+Read `assets/templates/cover-letter.tex`. Fill from `resume-config.md`. Compile in two passes, like the resume:
 
 ```bash
-pdflatex -interaction=nonstopmode -output-directory=targets/<slug> targets/<slug>/cover-letter.tex
+for pass in 1 2; do
+  pdflatex -interaction=nonstopmode -halt-on-error -output-directory=targets/<slug> targets/<slug>/cover-letter.tex > /dev/null
+done
+grep -E "^!|Output written" targets/<slug>/cover-letter.log
 ```
 
+Once it's clean, delete the `.aux`, `.log`, and `.out` files.
+
 Verify: exactly one page, 250-300 words, three paragraphs, at most two em-dashes in the whole letter, no generic opener, no contradiction with the resume.
+
+If the letter was written against the latest saved version, copy `cover-letter-draft.md`, `cover-letter.tex`, and `cover-letter.pdf` into that `versions/vN/` folder so the pair stays together, and note it in that version's row in the brief.
 
 If it runs long, cut words. Never shrink the font or the margins to fit.
 

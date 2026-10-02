@@ -11,8 +11,8 @@ have a TeX distribution installed.
 
 ## Paths
 
-- **Plugin root** holds `references/`, `assets/`, `scripts/`. If a path doesn't resolve, glob for the filename.
-- **Workspace** is the user's current folder.
+Read `references/workspace.md` for where everything lives. If a path doesn't resolve,
+glob for the filename. Run the server from the workspace root, or pass `--dir`.
 
 ## Start It
 
@@ -33,6 +33,10 @@ point is that it updates while you both work.
 **Resume layout** for anything at `targets/<slug>/draft.md`. A4 sheet with the real
 margins from `resume.cls`, section rules, right-aligned dates, tight bullet spacing.
 
+**Saved versions** (`targets/<slug>/versions/vN/draft.md`) appear in their own dropdown
+group, labelled like "AI Solutions Engineer · v2", with the same layout. They're frozen,
+so viewing one is for comparing against the working draft, never for editing.
+
 **Page boundaries** as red dashed lines wherever a page break falls, with the page
 number. This is the fastest way to answer "will this fit on one page."
 
@@ -50,13 +54,13 @@ have no minimum. Publications, education, and certifications are treated as
 informational.
 
 **Reference documents** get a plain document layout and an amber banner saying so.
-`master-resume.md` is deliberately not shown as a resume, because it isn't one. If a
+`sources/master-resume.md` is deliberately not shown as a resume, because it isn't one. If a
 user asks "is this how my resume will look?" while viewing the master, the answer is
 no, and the banner should already be telling them that.
 
 ## Rendering Every Resume
 
-Choose **All resumes** in the dropdown to stack every target draft with its own page
+Choose **All resumes** in the dropdown to stack every target's working draft (saved versions aren't included) with its own page
 count, fill percentage, bullet count, and over-limit chip. This is the right view for:
 
 - Comparing tailored versions of the same history
