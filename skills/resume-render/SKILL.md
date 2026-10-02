@@ -17,7 +17,7 @@ glob for the filename.
 1. `targets/<slug>/draft.md` exists with `**Status:** CONFIRMED`. If it says `DRAFTING`, stop and route back to `resume-target`. Rendering unconfirmed content wastes the fitting work.
 2. A LaTeX toolchain. Check with `which pdflatex`. If that fails, check `~/Library/TinyTeX/bin/universal-darwin/pdflatex` before concluding it's missing; it may be installed but not on this shell's PATH.
 
-   If it really is missing, install TinyTeX. It lives in the home directory and needs no admin password, so you can run all of it yourself (network access only, ~250MB on disk):
+   If it really is missing, install TinyTeX. It lives in the home directory and needs no admin password, so you can run all of it yourself (network access only, ~250MB on disk). On **macOS**:
 
    ```bash
    curl -fsSL https://github.com/rstudio/tinytex-releases/releases/download/daily/TinyTeX-1-darwin.tar.xz | tar -xJ -C ~/Library
@@ -25,7 +25,9 @@ glob for the filename.
    tlmgr install lastpage parskip enumitem fontawesome pgf fancyhdr moderncv fontawesome6 multirow colortbl ragged2e microtype babel-english lm
    ```
 
-   Then add that `export PATH=...` line to `~/.zshrc` so new terminals find it. Don't use TinyTeX's `install-bin-unix.sh`: without `--no-path` it may block on a `sudo` prompt, and with `--no-path` it exits with an error after extracting. Don't use `brew install --cask basictex` either; its installer needs `sudo`, which an agent shell can't answer.
+   Then add that `export PATH=...` line to `~/.zshrc` so new terminals find it. On macOS, don't use TinyTeX's `install-bin-unix.sh`: without `--no-path` it may block on a `sudo` prompt, and with `--no-path` it exits with an error after extracting. Don't use `brew install --cask basictex` either; its installer needs `sudo`, which an agent shell can't answer.
+
+   On **Linux**, the official script needs no `sudo` there: it installs to `~/.TinyTeX` and links the binaries into `~/.local/bin` or `~/bin`. Run `curl -sL "https://yihui.org/tinytex/install-bin-unix.sh" | sh`, then the same `tlmgr install` line. On **Windows**, the skills' shell commands assume a POSIX shell, so work inside WSL and follow the Linux steps.
 
    If the user already has MacTeX or BasicTeX, run the same `tlmgr install` line with `sudo`. It skips anything already present.
 
