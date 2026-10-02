@@ -3,6 +3,9 @@
 \moderncvstyle{classic}
 \moderncvcolor{green}
 \usepackage[utf8]{inputenc}
+% moderncv switches to T1 encoding; without a scalable font here pdflatex falls back to
+% bitmap Computer Modern and microtype aborts with "auto expansion is only possible with scalable fonts".
+\usepackage{lmodern}
 \usepackage{ragged2e}
 \usepackage[scale=0.79]{geometry}
 \renewcommand*{\makeletterclosing}{\par\vspace{2ex}\closingname\par}
@@ -18,7 +21,8 @@
 
 % GENERATE: Address the team or hiring manager by name when research turns one up.
 % Fall back to "Hiring Team" only when it doesn't.
-\recipient{To}{[Hiring Manager Name or Hiring Team]\\[Team or Org Name]\\[Company Name]\\[City, Country]}
+% A line that starts with [ after \\ is read as a spacing argument; keep placeholders braced.
+\recipient{To}{[Hiring Manager Name or Hiring Team]\\{[Team or Org Name]}\\{[Company Name]}\\{[City, Country]}}
 \date{\today}
 \opening{Dear [Name or Hiring Team],}
 \makelettertitle
@@ -39,9 +43,9 @@
 \vspace{0.3cm}
 % ========== CUSTOMIZE THESE ==========
 {Sincerely,\\
-[Your Full Name]\\
-[Your Current Title]\\
-[Your Current Employer]}
+{[Your Full Name]}\\
+{[Your Current Title]}\\
+{[Your Current Employer]}}
 % ======================================
 
 \end{document}

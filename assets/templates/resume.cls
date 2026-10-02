@@ -106,15 +106,20 @@
 %	SECTION FORMATTING
 %----------------------------------------------------------------------------------------
 
+% Every heading below is chained to its first line of content with \nopagebreak and
+% \@beginparpenalty\@M, so a page can only break before a heading, never just after it.
+
 % Defines the rSection environment for the large sections within the CV
 \newenvironment{rSection}[1]{ % 1 input argument - section name
    \sectionskip
-   {\bf #1}
+   {\bf #1}\nopagebreak
 %   \MakeUppercase{\bf #1} % Section title
-   \sectionlineskip
+   \sectionlineskip\nopagebreak
   \hrule % Horizontal line
+  \nopagebreak
   \begin{list}{}{ % List for each individual item in the section
     \setlength{\leftmargin}{0.50em} % Margin within the section
+    \@beginparpenalty\@M
   }
   \item[]
 }{
@@ -123,11 +128,12 @@
 
 \newenvironment{rSection2}[1]{ % 1 input argument - section name
   \sectionskip
-  {\bf #1} % Section title
-  \sectionlineskip
+  {\bf #1}\nopagebreak % Section title
+  \sectionlineskip\nopagebreak
   \hrule % Horizontal line
+  \nopagebreak
   \medskip
-  \begin{list}{$\bullet$}{\setlength{\leftmargin}{1.5em}}
+  \begin{list}{$\bullet$}{\setlength{\leftmargin}{1.5em}\@beginparpenalty\@M}
    \itemsep -0.3em \vspace{-0.5em} % Compress items in list together for aesthetics
 }{
   \end{list}
@@ -153,10 +159,10 @@
 \newenvironment{rSubsection}[4]{ % 4 input arguments - company name, year(s) employed, job title and location
  {\bf #1} \hfill {#2} % Bold company name and date on the right
  \ifthenelse{\equal{#3}{}}{}{ % If the third argument is not specified, don't print the job title and location line
-  \\
+  \\*
   {\em #3} \quad {\em #4} % Italic job title and location
-  }\smallskip
-  \begin{list}{$\cdot$}{\leftmargin=1.5em} % \cdot used for bullets, no indentation
+  }\nopagebreak\smallskip
+  \begin{list}{$\cdot$}{\leftmargin=1.5em \@beginparpenalty\@M} % \cdot used for bullets, no indentation
    \itemsep -0.2em \vspace{-0.2em} % Compress items in list together for aesthetics
   }{
   \end{list}
@@ -174,7 +180,7 @@
 \newenvironment{skillgroup}[1]{%
   \textbf{#1}\par\nopagebreak%
   \vspace{-\parskip}%
-  \begin{list}{--}{\leftmargin=0.8em \labelsep=0.3em \itemsep=0pt \topsep=0.1em \parsep=0pt \partopsep=0pt}%
+  \begin{list}{--}{\leftmargin=0.8em \labelsep=0.3em \itemsep=0pt \topsep=0.1em \parsep=0pt \partopsep=0pt \@beginparpenalty\@M}%
 }{%
   \end{list}%
   \vspace{-\parskip}\vspace{0.45em}%
