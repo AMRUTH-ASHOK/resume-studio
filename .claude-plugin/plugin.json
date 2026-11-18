@@ -1,0 +1,19 @@
+{
+  "name": "resume-studio",
+  "version": "1.0.0",
+  "description": "Build a master resume as your source of truth, then generate page-perfect LaTeX resumes tailored to any job description, grad program, or internal role.",
+  "author": {
+    "name": "Amruth Ashok"
+  },
+  "homepage": "https://github.com/Amruth-Ashok/resume-studio",
+  "repository": "https://github.com/Amruth-Ashok/resume-studio",
+  "license": "MIT",
+  "keywords": [
+    "resume",
+    "cv",
+    "latex",
+    "job-search",
+    "cover-letter",
+    "ats"
+  ]
+}

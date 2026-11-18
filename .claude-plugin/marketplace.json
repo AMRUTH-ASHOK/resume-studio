@@ -1,0 +1,23 @@
+{
+  "name": "resume-studio",
+  "owner": {
+    "name": "Amruth Ashok",
+    "url": "https://github.com/Amruth-Ashok"
+  },
+  "plugins": [
+    {
+      "name": "resume-studio",
+      "source": "./",
+      "description": "Build a master resume as your source of truth, then generate page-perfect LaTeX resumes tailored to any job description, grad program, or internal role.",
+      "license": "MIT",
+      "keywords": [
+        "resume",
+        "cv",
+        "latex",
+        "job-search",
+        "cover-letter",
+        "ats"
+      ]
+    }
+  ]
+}
